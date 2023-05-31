@@ -7,15 +7,15 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"  # 使用gpu0
 from global_ import *
 from global_annos import *
 from train_def import *
-#from vnet import VNet
+# from vnet import VNet
 from skvnet22 import SKVNet as VNet
 import time
 import torch.utils.data
 import torch.optim as optim
 
 
-BATCH_SIZE = 1 # 2\4
-EPOCH = 200 # 共跑200轮
+BATCH_SIZE = 4  # 2
+EPOCH = 100  # 共跑100/200轮
 
 
 print(DEVICE)
@@ -34,7 +34,7 @@ for i in range(0,8):  # 0,1,2,3,4,5,6,7   训练集
     data_path.append(bbox_img_path+fengefu+'subset%d' % i)  # 放入对应的训练集subset的绝对地址
     label_path.append(bbox_msk_path+fengefu+'subset%d' % i)
 dataset_train = myDataset(data_path, label_path)  # 送入dataset
-# print(len(dataset_train))
+print(len(dataset_train))
 train_loader = torch.utils.data.DataLoader(dataset_train,  # 生成dataloader
                                                batch_size=BATCH_SIZE, shuffle=False,
                                                num_workers=0)#16)  # 警告页面文件太小时可改为0
@@ -78,7 +78,6 @@ mome = 0.99  # 动量，可以认为是前冲的速度
 
 train_loss1 = 0.0
 lr = 1e-1
-##免去训练和验证直接测试+二维图片
 for epoch in range(1, EPOCH + 1):  # 每一个epoch  训练一轮   检测一轮
     if epoch ==180:  # 180轮时动量变为0.9，即更容易落入低点，也更难以回避局部最优点
         mome = 0.9
@@ -94,7 +93,7 @@ for epoch in range(1, EPOCH + 1):  # 每一个epoch  训练一轮   检测一轮
     torch.cuda.empty_cache()  # 清理内存
 
 
-    if epoch%valid_epoch_each == 5:   #  0如：每5轮验证一次
+    if epoch%valid_epoch_each == 5:   #  如：每5轮验证一次
 
         valid_loss, valid_zhibiao = test_model(model, DEVICE, valid_loader,epoch,test=False)   # 验证
         dice1 = valid_zhibiao[2]  # 记录dice值
@@ -128,7 +127,7 @@ train_time_pd = pd.DataFrame(time_list)  # 存成excel格式
 train_time_pd.to_excel(zhibiao_path + "/总epoch的训练时间（不包含测试）.xls")
 
 
-#训练和验证 结束，保存的最好模型在 model_path +fengefu +'best_model.pth'，用它进行测试
+# 训练和验证 结束，保存的最好模型在 model_path +fengefu +'best_model.pth'，用它进行测试
 
 test_start = time.perf_counter()  # 记录测试开始时间
 torch.cuda.empty_cache()  # 清一下内存

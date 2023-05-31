@@ -8,7 +8,6 @@ import numpy as np
 from sklearn.metrics import confusion_matrix
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-
 from global_annos import annos_list
 
 
@@ -54,15 +53,18 @@ def train_model(model, device, train_loader, optimizer, epoch):  # 训练模型
     tqdr = tqdm(enumerate(train_loader))  # 用一下tqdm函数，也就是进度条工具（枚举）
     for batch_index, (data, target) in tqdr:  # 取batch索引，（data，target），也就是图和标签
         data, target = data.to(device), target.to(device)  # 放到gpu或cpu上
+
         if True:
             data_cpu = data.clone().cpu()  # 取出图到cpu
             my_label_cpu = target.clone().cpu()  # 取出预测的二值分割到cpu
+
             for i in range(len(data_cpu)):  # 取出改batch中的单张图
                 true_img_tensor = data_cpu[i][0]  # 取图得到张量tensor，注意这里的[0]是因为我们在dataset部分给图增加了一个维度
                 true_label_tensor = my_label_cpu[i]  # 取得预测的二值分割张量tensor
+
                 use_plot_2d(true_img_tensor, true_label_tensor, z=8, batch_index=batch_index, i=i,
                             true_label=True)  # 存图，这里存标签图到pic
-                use_plot_3d(true_img_tensor, true_label_tensor, batch_index=batch_index, i=i, true_label=True)
+                use_plot_3d(true_img_tensor, true_label_tensor, batch_index=batch_index, i=i, true_label=True) #True  False
 
         output = model(data)  # 图 进模型 得到预测输出
 
@@ -140,9 +142,7 @@ def test_model(model, device, test_loader, epoch,test):    # 加了个test  1是
         F1 /= len(test_loader)
 
         print(" Epoch : {} \t {} Loss : {:.6f} \t DICE :{:.6f} PA: {:.6f} ".format(epoch, name,test_loss,DICE,PA))
-
         return test_loss, [PA, IOU, DICE, P, R, F1]
-
 
 
 
@@ -239,11 +239,6 @@ class myDataset(Dataset):
         return annos_path  # ###半径最大才12
 
 
-
-
-
-
-
 def zhibiao(data,label):   #   data  n,2,96,96,96  label  n,96,96,96
 
     ###        这里需要把data变换成label形式，方法是取大为1
@@ -337,11 +332,6 @@ def numpy_to_list(x,numpy):
 
 
 
-
-
-
-
-
 def show_loss(loss_list,STR,path):  ###  损失列表，损失名称，保存位置
     EPOCH = len(loss_list)  ##  训练集中是  总epoch   验证集中是  总epoch/每多少epoch进行验证集的epoch数   测试集中就一个数不用画
     x1 = range(0, EPOCH)
@@ -378,16 +368,18 @@ def use_plot_2d(image,output,z = 132,batch_index=0,i=0,true_label=False):
             os.mkdir(path +fengefu+'pic')
         plt.savefig(path +'/pic/%d_%d.jpg'%(batch_index,i))
     plt.close()
-
+#
 def use_plot_3d(image,output,batch_index=0,i=0,true_label=False):
     img = image.numpy()
     output = output.numpy()
+    # print(output)
     from pathlib import Path
     Path('E:\datasets\sk_output\pic_3d\img').mkdir(exist_ok=True,parents=True)
     np.save('E:\datasets\sk_output\pic_3d\img\{}_{}.npy'.format(batch_index,i), img)
     if true_label:
-        Path('E:\datasets\sk_output\pic_3d\lbl').mkdir(exist_ok=True, parents=True)
-        np.save('E:\datasets\sk_output\pic_3d\lbl\{}_{}.npy'.format(batch_index, i), img)
-    else:
         Path('E:\datasets\sk_output\pic_3d\pre').mkdir(exist_ok=True, parents=True)
-        np.save('E:\datasets\sk_output\pic_3d\pre\{}_{}.npy'.format(batch_index, i), output)
+        np.save('E:\datasets\sk_output\pic_3d\pre\{}_{}.npy'.format(batch_index, i), img)
+    else:
+        Path('E:\datasets\sk_output\pic_3d\lbl').mkdir(exist_ok=True, parents=True)
+        np.save('E:\datasets\sk_output\pic_3d\lbl\{}_{}.npy'.format(batch_index, i), output)
+        # print('***********')
